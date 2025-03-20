@@ -15,9 +15,9 @@ public class UI extends JFrame{
         rgbCode.setActionCommand("rgbCode");
         rgbCode.addActionListener(drawPanel);
 
-        drawPanel = new DrawPanel(rgbCode);
+        drawPanel = new DrawPanel(rgbCode,900,670);
         drawPanel.setBackground(Color.WHITE);
-        drawPanel.setBounds(0,110,900,670);
+        drawPanel.setLocation(0,110);
         add(drawPanel);
 
 
@@ -65,7 +65,7 @@ public class UI extends JFrame{
         dopPanel.add(rgbCode);
         dopPanel.add(trashButton);
 
-        ImageButton pipette = new ImageButton("img/trash.png");
+        ImageButton pipette = new ImageButton("img/pipette.png");
         pipette.setActionCommand("pipette");
         pipette.addActionListener(drawPanel);
         dopPanel.add(pipette);

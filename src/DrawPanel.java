@@ -5,6 +5,10 @@ import java.awt.image.BufferedImage;
 
 
 public class DrawPanel extends JPanel implements MouseMotionListener, MouseListener, ActionListener {
+
+    private JTextField rgbCodeField;
+    private int width; private int height;
+
     private Color color = Color.BLACK;
     private int weight = 1;
     private int weightWhite = 30;
@@ -12,11 +16,20 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     private boolean pipetteTurn = false;
     private int oldX;
     private int oldY;
-    private JTextField rgbCodeField;
-    private String hexColor = String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
+    private String hexColor;
+    private Color[][] container;
 
-    public DrawPanel(JTextField rgbCodeField) {
+    public DrawPanel(JTextField rgbCodeField, int width, int height) {
         this.rgbCodeField = rgbCodeField;
+        this.width = width;
+        this.height = height;
+
+        setSize(width,height);
+
+        container = new Color[width][height];
+
+
+
         addMouseMotionListener(this);
         addMouseListener(this);
     }
@@ -59,6 +72,20 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         }
     }
 
+    public static void printContainer(Color[][] a){
+        for (int i = 0; i < a.length; i++) {
+            for (int j = 0; j < a[i].length; j++) {
+                if (a[i][j] == null) {
+                    a[i][j] = Color.WHITE;
+                }
+                if (a[i][j]!= Color.WHITE){
+                    System.out.print(a[i][j]+" ");
+                }
+            }
+            System.out.println();
+        }
+    }
+
     public void paintSmile(int x,int y){
         Graphics g = getGraphics();
         g.setColor(Color.YELLOW);
@@ -95,9 +122,12 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             if (color == Color.WHITE){
                 g.fillRect(x -(weightWhite/2), y -(weightWhite/2),weightWhite,weightWhite);
             }else {
-
                 g2.setStroke(new BasicStroke(weight));
                 g.drawLine(oldX, oldY, x, y);
+//                if (weight == 1){
+//                    container[oldX][oldY] = color;
+//                    printContainer(container);
+//                }
             }
         }
 
@@ -115,23 +145,37 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if(smileTurn){
-            paintSmile(oldX-150, oldY-150);
-        } else if (pipetteTurn){
-            BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
-            paint(image.getGraphics());
-            color = new Color(image.getRGB(oldX, oldY));
-            System.out.println(oldX+" "+oldY);
-            System.out.println(hexColor);
-            rgbCodeField.setText(hexColor);
-        }
+        if (smileTurn) {
+            paintSmile(oldX - 150, oldY - 150);
+        } else if (pipetteTurn) {
+            try {
+                Robot robot = new Robot();
 
+                Point screenPoint = e.getPoint();
+                SwingUtilities.convertPointToScreen(screenPoint, e.getComponent());  // Преобразуем координаты окна в координаты экрана
+
+                color = robot.getPixelColor(screenPoint.x, screenPoint.y);
+
+                hexColor = "#" + Integer.toHexString(color.getRGB()).substring(2);
+
+                System.out.println("Координаты экрана: " + screenPoint.x + ", " + screenPoint.y);
+                System.out.println("Цвет: " + hexColor);
+
+                rgbCodeField.setText(hexColor);
+                pipetteTurn = false;
+            } catch (AWTException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
             case "pipette":
+                if (smileTurn) {
+                    smileTurn = false;
+                }
                 pipetteTurn = !pipetteTurn;
                 addMouseListener(this);
                 break;
@@ -142,6 +186,9 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
                 repaint();
                 break;
             case "smile":
+                if (pipetteTurn) {
+                    pipetteTurn = false;
+                }
                 smileTurn = !smileTurn;
                 break;
             case "1":
@@ -197,6 +244,9 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
                 }
                 if (smileTurn) {
                     smileTurn = false;
+                }
+                if (pipetteTurn) {
+                    pipetteTurn = false;
                 }
                 break;
         }
