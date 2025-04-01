@@ -48,10 +48,13 @@ public class UI extends JFrame{
         }
 
         JPanel dopPanel = new JPanel();
-        dopPanel.setLayout(new GridLayout(2,2,5,5));
+        dopPanel.setLayout(new GridLayout(2,3,5,5));
         dopPanel.setBackground(Color.WHITE);
-        dopPanel.setBounds(260,0,110,110);
+        dopPanel.setBounds(260,0,160,110);
 
+        JButton redraw = new JButton("Redraw");
+        redraw.setActionCommand("redraw");
+        redraw.addActionListener(drawPanel);
 
 
         ImageButton smileButton = new ImageButton("img/smile.png");
@@ -63,12 +66,14 @@ public class UI extends JFrame{
         trashButton.setActionCommand("trash");
         trashButton.addActionListener(drawPanel);
         dopPanel.add(rgbCode);
+        dopPanel.add(redraw);
         dopPanel.add(trashButton);
 
         ImageButton pipette = new ImageButton("img/pipette.png");
         pipette.setActionCommand("pipette");
         pipette.addActionListener(drawPanel);
         dopPanel.add(pipette);
+
 
 
         toolPanel.add(dopPanel);

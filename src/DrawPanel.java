@@ -1,14 +1,13 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 
 public class DrawPanel extends JPanel implements MouseMotionListener, MouseListener, ActionListener {
 
     private JTextField rgbCodeField;
     private int width; private int height;
-
     private Color color = Color.BLACK;
     private int weight = 1;
     private int weightWhite = 30;
@@ -17,7 +16,8 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     private int oldX;
     private int oldY;
     private String hexColor;
-    private Color[][] container;
+    private ArrayList<Integer> xCopy = new ArrayList<>();
+    private ArrayList<Integer> yCopy = new ArrayList<>();
 
     public DrawPanel(JTextField rgbCodeField, int width, int height) {
         this.rgbCodeField = rgbCodeField;
@@ -25,10 +25,6 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         this.height = height;
 
         setSize(width,height);
-
-        container = new Color[width][height];
-
-
 
         addMouseMotionListener(this);
         addMouseListener(this);
@@ -124,15 +120,13 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
             }else {
                 g2.setStroke(new BasicStroke(weight));
                 g.drawLine(oldX, oldY, x, y);
-//                if (weight == 1){
-//                    container[oldX][oldY] = color;
-//                    printContainer(container);
-//                }
             }
         }
 
         oldX= e.getX();
         oldY= e.getY();
+        xCopy.add(e.getX());
+        yCopy.add(e.getY());
     }
 
     @Override
@@ -172,6 +166,19 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
+            case "redraw":
+                Graphics g = getGraphics();
+                g.setColor(Color.WHITE);
+                g.fillRect(0,0, width, height);
+                RedrawThread redrawThread = new RedrawThread(xCopy,yCopy,g, color,weight);
+                redrawThread.start();
+                if (redrawThread.isDone()){
+                    System.out.println("ok");
+                    xCopy.clear();
+                    yCopy.clear();
+                    redrawThread.setDone(false);
+                }
+                break;
             case "pipette":
                 if (smileTurn) {
                     smileTurn = false;
@@ -280,5 +287,53 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     @Override
     public void mouseExited(MouseEvent e) {
 
+    }
+}
+
+class RedrawThread extends Thread{
+
+    private boolean Done = false;
+    private ArrayList<Integer> xCopy;
+    private ArrayList<Integer> yCopy;
+    private Graphics g;
+    private Color color;
+    private int weight;
+
+    RedrawThread(ArrayList<Integer> x,ArrayList<Integer> y, Graphics g, Color color, int weight){
+        this.xCopy = x;
+        this.yCopy = y;
+        this.g = g;
+        this.color = color;
+        this. weight = weight;
+    }
+
+    public boolean isDone() {
+        return Done;
+    }
+
+    public void setDone(boolean done) {
+        Done = done;
+    }
+
+    @Override
+    public void run() {
+        Graphics2D g2 = (Graphics2D) g;
+        g.setColor(color);
+        for (int i = 0; i < xCopy.size()-2; i++) {
+            int x = xCopy.get(i++);
+            int y = yCopy.get(i++);
+            int tempX = xCopy.get(i);
+            int tempY = yCopy.get(i);
+            g2.setStroke(new BasicStroke(weight));
+            g.drawLine(tempX, tempY, x, y);
+            try {
+                sleep(5);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        xCopy.clear();
+        yCopy.clear();
+        Done = true;
     }
 }
