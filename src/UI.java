@@ -1,9 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class UI extends JFrame{
     private DrawPanel drawPanel;
-
     public UI() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("Window");
@@ -13,12 +14,13 @@ public class UI extends JFrame{
 
         JTextField rgbCode = new JTextField("#");
         rgbCode.setActionCommand("rgbCode");
-        rgbCode.addActionListener(drawPanel);
 
-        drawPanel = new DrawPanel(rgbCode,900,670);
+        drawPanel = new DrawPanel(rgbCode,900,670, this);
         drawPanel.setBackground(Color.WHITE);
         drawPanel.setLocation(0,110);
         add(drawPanel);
+
+        rgbCode.addActionListener(drawPanel);
 
 
         JPanel toolPanel = new JPanel();

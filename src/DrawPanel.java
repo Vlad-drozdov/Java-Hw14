@@ -18,11 +18,14 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
     private String hexColor;
     private ArrayList<Integer> xCopy = new ArrayList<>();
     private ArrayList<Integer> yCopy = new ArrayList<>();
+    private UI ui;
 
-    public DrawPanel(JTextField rgbCodeField, int width, int height) {
+    public DrawPanel(JTextField rgbCodeField, int width, int height, UI ui) {
         this.rgbCodeField = rgbCodeField;
         this.width = width;
         this.height = height;
+        this.ui = ui;
+
 
         setSize(width,height);
 
@@ -30,7 +33,7 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
         addMouseListener(this);
     }
 
-    public static String rgbCodeFormate(String code){
+    public static String rgbCodeFormate(String code) throws ColorCodeException{
         char[] hexChars = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
         code.toUpperCase();
         if (code.length() == 7) {
@@ -43,12 +46,12 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
                         }
                     }
                     if (test == 0){
-                        return "#000000";
+                        throw new ColorCodeException("Невірний код. За змовчуванням встановлено чорний.");
                     }
                 }
                 return code;
             } else {
-                return "#000000";
+                throw new ColorCodeException("Невірний код. За змовчуванням встановлено чорний.");
             }
         } else if (code.length() == 6){
             for (int i = 0; i < code.length(); i++) {
@@ -59,12 +62,12 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
                     }
                 }
                 if (test == 0){
-                    return "#000000";
+                    throw new ColorCodeException("Невірний код. За змовчуванням встановлено чорний.");
                 }
             }
             return "#"+code;
         } else {
-            return "#000000";
+            throw new ColorCodeException("Невірний код. За змовчуванням встановлено чорний.");
         }
     }
 
@@ -152,9 +155,6 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
 
                 hexColor = "#" + Integer.toHexString(color.getRGB()).substring(2);
 
-                System.out.println("Координаты экрана: " + screenPoint.x + ", " + screenPoint.y);
-                System.out.println("Цвет: " + hexColor);
-
                 rgbCodeField.setText(hexColor);
                 pipetteTurn = false;
             } catch (AWTException ex) {
@@ -187,7 +187,13 @@ public class DrawPanel extends JPanel implements MouseMotionListener, MouseListe
                 addMouseListener(this);
                 break;
             case "rgbCode":
-                color = Color.decode(rgbCodeFormate(rgbCodeField.getText()));
+
+                try {
+                    color = Color.decode(rgbCodeFormate(rgbCodeField.getText()));
+                } catch (ColorCodeException ex) {
+                    color = Color.BLACK;
+                    new ErrorUI(ex.getMessage(), ex.getClass(), ui);
+                }
                 break;
             case "trash":
                 repaint();
@@ -335,5 +341,12 @@ class RedrawThread extends Thread{
         xCopy.clear();
         yCopy.clear();
         Done = true;
+    }
+}
+
+class ColorCodeException extends Exception {
+
+    public ColorCodeException(String msg){
+        super(msg);
     }
 }
